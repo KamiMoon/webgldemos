@@ -1,284 +1,325 @@
+
+
 /**
- * @author mrdoob / http://mrdoob.com/
+ * @author mschuetz / http://mschuetz.at
+ *
+ * adapted from THREE.OrbitControls by 
+ *
+ * @author qiao / https://github.com/qiao
+ * @author mrdoob / http://mrdoob.com
  * @author alteredq / http://alteredqualia.com/
- * @author paulirish / http://paulirish.com/
+ * @author WestLangley / http://github.com/WestLangley
+ * @author erich666 / http://erichaines.com
+ *
+ * This set of controls performs first person navigation without mouse lock.
+ * Instead, rotating the camera is done by dragging with the left mouse button.
+ *
+ * move: a/s/d/w or up/down/left/right
+ * rotate: left mouse
+ * pan: right mouse
+ * change speed: mouse wheel
+ *
+ *
  */
 
+
+
 THREE.FirstPersonControls = function ( object, domElement ) {
-
 	this.object = object;
-	this.target = new THREE.Vector3( 0, 0, 0 );
-
 	this.domElement = ( domElement !== undefined ) ? domElement : document;
+	
+	// Set to false to disable this control
+	this.enabled = true;
 
-	this.movementSpeed = 1.0;
-	this.lookSpeed = 0.005;
+	this.rotateSpeed = 1.0;
+	this.moveSpeed = 10.0;
 
-	this.lookVertical = true;
-	this.autoForward = false;
-	// this.invertVertical = false;
+	this.keys = { 
+		LEFT: 37, 
+		UP: 38, 
+		RIGHT: 39, 
+		BOTTOM: 40,
+		A: 'A'.charCodeAt(0),
+		S: 'S'.charCodeAt(0),
+		D: 'D'.charCodeAt(0),
+		W: 'W'.charCodeAt(0)
+	};
 
-	this.activeLook = true;
+	var scope = this;
 
-	this.heightSpeed = false;
-	this.heightCoef = 1.0;
-	this.heightMin = 0.0;
-	this.heightMax = 1.0;
+	var rotateStart = new THREE.Vector2();
+	var rotateEnd = new THREE.Vector2();
+	var rotateDelta = new THREE.Vector2();
 
-	this.constrainVertical = false;
-	this.verticalMin = 0;
-	this.verticalMax = Math.PI;
+	var panStart = new THREE.Vector2();
+	var panEnd = new THREE.Vector2();
+	var panDelta = new THREE.Vector2();
+	var panOffset = new THREE.Vector3();
 
-	this.autoSpeedFactor = 0.0;
+	var offset = new THREE.Vector3();
 
-	this.mouseX = 0;
-	this.mouseY = 0;
+	var phiDelta = 0;
+	var thetaDelta = 0;
+	var scale = 1;
+	var pan = new THREE.Vector3();
 
-	this.lat = 0;
-	this.lon = 0;
-	this.phi = 0;
-	this.theta = 0;
+	var lastPosition = new THREE.Vector3();
 
-	this.moveForward = false;
-	this.moveBackward = false;
-	this.moveLeft = false;
-	this.moveRight = false;
-	this.freeze = false;
+	var STATE = { NONE : -1, ROTATE : 0, SPEEDCHANGE : 1, PAN : 2 };
 
-	this.mouseDragOn = false;
+	var state = STATE.NONE;
 
-	this.viewHalfX = 0;
-	this.viewHalfY = 0;
+	// for reset
+	this.position0 = this.object.position.clone();
 
-	if ( this.domElement !== document ) {
+	// events
 
-		this.domElement.setAttribute( 'tabindex', -1 );
+	var changeEvent = { type: 'change' };
+	var startEvent = { type: 'start'};
+	var endEvent = { type: 'end'};
+
+	this.rotateLeft = function ( angle ) {
+		thetaDelta -= angle;
+	};
+
+	this.rotateUp = function ( angle ) {
+		phiDelta -= angle;
+	};
+
+	// pass in distance in world space to move left
+	this.panLeft = function ( distance ) {
+
+		var te = this.object.matrix.elements;
+
+		// get X column of matrix
+		panOffset.set( te[ 0 ], te[ 1 ], te[ 2 ] );
+		panOffset.multiplyScalar( - distance );
+		
+		pan.add( panOffset );
+
+	};
+
+	// pass in distance in world space to move up
+	this.panUp = function ( distance ) {
+
+		var te = this.object.matrix.elements;
+
+		// get Y column of matrix
+		panOffset.set( te[ 4 ], te[ 5 ], te[ 6 ] );
+		panOffset.multiplyScalar( distance );
+		
+		pan.add( panOffset );
+
+	};
+	
+	// pass in distance in world space to move forward
+	this.panForward = function ( distance ) {
+
+		var te = this.object.matrix.elements;
+
+		// get Y column of matrix
+		panOffset.set( te[ 8 ], te[ 9 ], te[ 10 ] );
+		panOffset.multiplyScalar( distance );
+		
+		pan.add( panOffset );
+
+	};
+	
+	this.pan = function ( deltaX, deltaY ) {
+
+		var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+		if ( scope.object.fov !== undefined ) {
+			// perspective
+			var position = scope.object.position;
+			var offset = position.clone();
+			var targetDistance = offset.length();
+
+			// half of the fov is center to top of screen
+			targetDistance *= Math.tan( ( scope.object.fov / 2 ) * Math.PI / 180.0 );
+
+			// we actually don't use screenWidth, since perspective camera is fixed to screen height
+			scope.panLeft( 2 * deltaX * targetDistance / element.clientHeight );
+			scope.panUp( 2 * deltaY * targetDistance / element.clientHeight );
+		} else if ( scope.object.top !== undefined ) {
+
+			// orthographic
+			scope.panLeft( deltaX * (scope.object.right - scope.object.left) / element.clientWidth );
+			scope.panUp( deltaY * (scope.object.top - scope.object.bottom) / element.clientHeight );
+		} else {
+
+			// camera neither orthographic or perspective
+			console.warn( 'WARNING: FirstPersonControls.js encountered an unknown camera type - pan disabled.' );
+		}
+	};
+
+	this.update = function (delta) {
+		var position = this.object.position;
+		
+		if(delta !== undefined){
+			if(this.moveRight){
+				this.panLeft(-delta * this.moveSpeed);
+			}
+			if(this.moveLeft){
+				this.panLeft(delta * this.moveSpeed);
+			}
+			if(this.moveForward){
+				this.panForward(-delta * this.moveSpeed);
+			}
+			if(this.moveBackward){
+				this.panForward(delta * this.moveSpeed);
+			}
+		}
+		
+		if(!pan.equals(new THREE.Vector3(0,0,0))){
+			var event = {
+				type: 'move',
+				translation: pan.clone()
+			};
+			this.dispatchEvent(event);
+		}
+		
+		position.add(pan);
+		
+		this.object.updateMatrix();
+		var rot = new THREE.Matrix4().makeRotationY(thetaDelta);
+		var res = new THREE.Matrix4().multiplyMatrices(rot, this.object.matrix);
+		this.object.quaternion.setFromRotationMatrix(res);
+		
+		this.object.rotation.x += phiDelta;
+
+		thetaDelta = 0;
+		phiDelta = 0;
+		scale = 1;
+		pan.set( 0, 0, 0 );
+
+		if ( lastPosition.distanceTo( this.object.position ) > 0 ) {
+			this.dispatchEvent( changeEvent );
+
+			lastPosition.copy( this.object.position );
+		}
+	};
+
+
+	this.reset = function () {
+		state = STATE.NONE;
+
+		this.object.position.copy( this.position0 );
+	};
+
+	function onMouseDown( event ) {
+		if ( scope.enabled === false ) return;
+		event.preventDefault();
+
+		if ( event.button === 0 ) {
+			state = STATE.ROTATE;
+
+			rotateStart.set( event.clientX, event.clientY );
+		} else if ( event.button === 2 ) {
+			state = STATE.PAN;
+
+			panStart.set( event.clientX, event.clientY );
+		}
+
+		scope.domElement.addEventListener( 'mousemove', onMouseMove, false );
+		scope.domElement.addEventListener( 'mouseup', onMouseUp, false );
+		scope.dispatchEvent( startEvent );
+	}
+
+	function onMouseMove( event ) {
+		if ( scope.enabled === false ) return;
+
+		event.preventDefault();
+
+		var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+		if ( state === STATE.ROTATE ) {
+			rotateEnd.set( event.clientX, event.clientY );
+			rotateDelta.subVectors( rotateEnd, rotateStart );
+
+			// rotating across whole screen goes 360 degrees around
+			scope.rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed );
+
+			// rotating up and down along whole screen attempts to go 360, but limited to 180
+			scope.rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed );
+
+			rotateStart.copy( rotateEnd );
+
+		} else if ( state === STATE.PAN ) {
+			panEnd.set( event.clientX, event.clientY );
+			panDelta.subVectors( panEnd, panStart );
+			
+			scope.pan( panDelta.x, panDelta.y );
+
+			panStart.copy( panEnd );
+		}
+	}
+
+	function onMouseUp() {
+		if ( scope.enabled === false ) return;
+
+		scope.domElement.removeEventListener( 'mousemove', onMouseMove, false );
+		scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
+		scope.dispatchEvent( endEvent );
+		state = STATE.NONE;
 
 	}
 
-	//
-
-	this.handleResize = function () {
-
-		if ( this.domElement === document ) {
-
-			this.viewHalfX = window.innerWidth / 2;
-			this.viewHalfY = window.innerHeight / 2;
-
-		} else {
-
-			this.viewHalfX = this.domElement.offsetWidth / 2;
-			this.viewHalfY = this.domElement.offsetHeight / 2;
-
-		}
-
-	};
-
-	this.onMouseDown = function ( event ) {
-
-		if ( this.domElement !== document ) {
-
-			this.domElement.focus();
-
-		}
+	function onMouseWheel(event) {
+		if ( scope.enabled === false || scope.noZoom === true ) return;
 
 		event.preventDefault();
-		event.stopPropagation();
 
-		if ( this.activeLook ) {
-
-			switch ( event.button ) {
-
-				case 0: this.moveForward = true; break;
-				case 2: this.moveBackward = true; break;
-
-			}
-
+		var delta = 0;
+		if ( event.wheelDelta !== undefined ) { // WebKit / Opera / Explorer 9
+			delta = event.wheelDelta;
+		} else if ( event.detail !== undefined ) { // Firefox
+			delta = - event.detail;
 		}
 
-		this.mouseDragOn = true;
+		scope.moveSpeed += scope.moveSpeed * 0.001 * delta;
+		scope.moveSpeed = Math.max(0.1, scope.moveSpeed);
 
-	};
+		scope.dispatchEvent( startEvent );
+		scope.dispatchEvent( endEvent );
+	}
 
-	this.onMouseUp = function ( event ) {
-
-		event.preventDefault();
-		event.stopPropagation();
-
-		if ( this.activeLook ) {
-
-			switch ( event.button ) {
-
-				case 0: this.moveForward = false; break;
-				case 2: this.moveBackward = false; break;
-
-			}
-
-		}
-
-		this.mouseDragOn = false;
-
-	};
-
-	this.onMouseMove = function ( event ) {
-
-		if ( this.domElement === document ) {
-
-			this.mouseX = event.pageX - this.viewHalfX;
-			this.mouseY = event.pageY - this.viewHalfY;
-
-		} else {
-
-			this.mouseX = event.pageX - this.domElement.offsetLeft - this.viewHalfX;
-			this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
-
-		}
-
-	};
-
-	this.onKeyDown = function ( event ) {
-
-		//event.preventDefault();
-
+	function onKeyDown( event ) {
+		if ( scope.enabled === false) return;
+		
 		switch ( event.keyCode ) {
-
-			case 38: /*up*/
-			case 87: /*W*/ this.moveForward = true; break;
-
-			case 37: /*left*/
-			case 65: /*A*/ this.moveLeft = true; break;
-
-			case 40: /*down*/
-			case 83: /*S*/ this.moveBackward = true; break;
-
-			case 39: /*right*/
-			case 68: /*D*/ this.moveRight = true; break;
-
-			case 82: /*R*/ this.moveUp = true; break;
-			case 70: /*F*/ this.moveDown = true; break;
-
-			case 81: /*Q*/ this.freeze = !this.freeze; break;
-
+			case scope.keys.UP: scope.moveForward = true; break;
+			case scope.keys.BOTTOM: scope.moveBackward = true; break;
+			case scope.keys.LEFT: scope.moveLeft = true; break;
+			case scope.keys.RIGHT: scope.moveRight = true; break;
+			case scope.keys.W: scope.moveForward = true; break;
+			case scope.keys.S: scope.moveBackward = true; break;
+			case scope.keys.A: scope.moveLeft = true; break;
+			case scope.keys.D: scope.moveRight = true; break;			
 		}
-
-	};
-
-	this.onKeyUp = function ( event ) {
-
-		switch( event.keyCode ) {
-
-			case 38: /*up*/
-			case 87: /*W*/ this.moveForward = false; break;
-
-			case 37: /*left*/
-			case 65: /*A*/ this.moveLeft = false; break;
-
-			case 40: /*down*/
-			case 83: /*S*/ this.moveBackward = false; break;
-
-			case 39: /*right*/
-			case 68: /*D*/ this.moveRight = false; break;
-
-			case 82: /*R*/ this.moveUp = false; break;
-			case 70: /*F*/ this.moveDown = false; break;
-
+	}
+	
+	function onKeyUp( event ) {
+		switch ( event.keyCode ) {
+			case scope.keys.W: scope.moveForward = false; break;
+			case scope.keys.S: scope.moveBackward = false; break;
+			case scope.keys.A: scope.moveLeft = false; break;
+			case scope.keys.D: scope.moveRight = false; break;
+			case scope.keys.UP: scope.moveForward = false; break;
+			case scope.keys.BOTTOM: scope.moveBackward = false; break;
+			case scope.keys.LEFT: scope.moveLeft = false; break;
+			case scope.keys.RIGHT: scope.moveRight = false; break;
 		}
-
-	};
-
-	this.update = function( delta ) {
-
-		if ( this.freeze ) {
-
-			return;
-
-		}
-
-		if ( this.heightSpeed ) {
-
-			var y = THREE.Math.clamp( this.object.position.y, this.heightMin, this.heightMax );
-			var heightDelta = y - this.heightMin;
-
-			this.autoSpeedFactor = delta * ( heightDelta * this.heightCoef );
-
-		} else {
-
-			this.autoSpeedFactor = 0.0;
-
-		}
-
-		var actualMoveSpeed = delta * this.movementSpeed;
-
-		if ( this.moveForward || ( this.autoForward && !this.moveBackward ) ) this.object.translateZ( - ( actualMoveSpeed + this.autoSpeedFactor ) );
-		if ( this.moveBackward ) this.object.translateZ( actualMoveSpeed );
-
-		if ( this.moveLeft ) this.object.translateX( - actualMoveSpeed );
-		if ( this.moveRight ) this.object.translateX( actualMoveSpeed );
-
-		if ( this.moveUp ) this.object.translateY( actualMoveSpeed );
-		if ( this.moveDown ) this.object.translateY( - actualMoveSpeed );
-
-		var actualLookSpeed = delta * this.lookSpeed;
-
-		if ( !this.activeLook ) {
-
-			actualLookSpeed = 0;
-
-		}
-
-		var verticalLookRatio = 1;
-
-		if ( this.constrainVertical ) {
-
-			verticalLookRatio = Math.PI / ( this.verticalMax - this.verticalMin );
-
-		}
-
-		this.lon += this.mouseX * actualLookSpeed;
-		if( this.lookVertical ) this.lat -= this.mouseY * actualLookSpeed * verticalLookRatio;
-
-		this.lat = Math.max( - 85, Math.min( 85, this.lat ) );
-		this.phi = THREE.Math.degToRad( 90 - this.lat );
-
-		this.theta = THREE.Math.degToRad( this.lon );
-
-		if ( this.constrainVertical ) {
-
-			this.phi = THREE.Math.mapLinear( this.phi, 0, Math.PI, this.verticalMin, this.verticalMax );
-
-		}
-
-		var targetPosition = this.target,
-			position = this.object.position;
-
-		targetPosition.x = position.x + 100 * Math.sin( this.phi ) * Math.cos( this.theta );
-		targetPosition.y = position.y + 100 * Math.cos( this.phi );
-		targetPosition.z = position.z + 100 * Math.sin( this.phi ) * Math.sin( this.theta );
-
-		this.object.lookAt( targetPosition );
-
-	};
-
+	}
 
 	this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+	this.domElement.addEventListener( 'mousedown', onMouseDown, false );
+	this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
+	this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
 
-	this.domElement.addEventListener( 'mousemove', bind( this, this.onMouseMove ), false );
-	this.domElement.addEventListener( 'mousedown', bind( this, this.onMouseDown ), false );
-	this.domElement.addEventListener( 'mouseup', bind( this, this.onMouseUp ), false );
-	
-	window.addEventListener( 'keydown', bind( this, this.onKeyDown ), false );
-	window.addEventListener( 'keyup', bind( this, this.onKeyUp ), false );
-
-	function bind( scope, fn ) {
-
-		return function () {
-
-			fn.apply( scope, arguments );
-
-		};
-
-	};
-
-	this.handleResize();
+	window.addEventListener( 'keydown', onKeyDown, false );
+	window.addEventListener( 'keyup', onKeyUp, false );
 
 };
+
+THREE.FirstPersonControls.prototype = Object.create( THREE.EventDispatcher.prototype );

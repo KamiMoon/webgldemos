@@ -212,7 +212,7 @@
 
  function addCameraControls() {
      // Add OrbitcameraControls so that we can pan around with the mouse.
-     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
+     //cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
      //cameraControls = new THREE.FirstPersonControls(camera, renderer.domElement);
      /*
      cameraControls.movementSpeed = 0.001;
@@ -220,6 +220,9 @@
      cameraControls.noFly = true;
      cameraControls.lookVertical = true;
      cameraControls.activeLook = true;*/
+
+     cameraControls = new THREE.FirstPersonControls(camera, renderer.domElement);
+     cameraControls.moveSpeed = 0.001;
  }
 
  function addAxisHelper() {
@@ -314,7 +317,9 @@
 
 
      if (cameraControls) {
-         cameraControls.update(delta);
+         //cameraControls.update(delta);
+        cameraControls.update(delta);
+
      }
 
      TWEEN.update();
