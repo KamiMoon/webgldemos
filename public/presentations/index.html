@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1024" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>WebGL Presentation</title>
+
+<meta name="description"
+	content="HTML5 WebGL Presentation" />
+<meta name="author" content="Eric Kizaki" />
+
+<link
+	href="http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic"
+	rel="stylesheet" />
+<link href="css/impress-demo.css" rel="stylesheet" />
+
+<link rel="shortcut icon" href="favicon.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="http://balupton.github.com/jquery-syntaxhighlighter/scripts/jquery.syntaxhighlighter.min.js"></script>
+<script>
+$.SyntaxHighlighter.init();
+</script>
+
+</head>
+<body class="impress-not-supported">
+	<div class="fallback-message">
+		<p>
+			Your browser <b>doesn't support the features required</b> by
+			impress.js, so you are presented with a simplified version of this
+			presentation.
+		</p>
+		<p>
+			For the best experience please use the latest <b>Chrome</b>, <b>Safari</b>
+			or <b>Firefox</b> browser.
+		</p>
+	</div>
+	<!--
+    To change the duration of the transition between slides use `data-transition-duration="2000"` giving it
+    a number of ms. It defaults to 1000 (1s).
+
+    You can also control the perspective with `data-perspective="500"` giving it a number of pixels.
+    It defaults to 1000. You can set it to 0 if you don't want any 3D effects.
+    If you are willing to change this value make sure you understand how CSS perspective works:
+    https://developer.mozilla.org/en/CSS/perspective
+-->
+	<!--
+        So to make a summary of all the possible attributes used to position presentation steps, we have:
+
+        * `data-x`, `data-y`, `data-z` - they define the position of **the center** of step element on
+            the canvas in pixels; their default value is 0;
+        * `data-rotate-x`, `data-rotate-y`, 'data-rotate-z`, `data-rotate` - they define the rotation of
+            the element around given axis in degrees; their default value is 0; `data-rotate` and `data-rotate-z`
+            are exactly the same;
+        * `data-scale` - defines the scale of step element; default value is 1
+
+        These values are used by impress.js in CSS transformation functions, so for more information consult
+        CSS transfrom docs: https://developer.mozilla.org/en/CSS/transform
+    -->
+	<!--
+
+        The `id` attribute of the step element is used to identify it in the URL, but it's optional.
+        If it is not defined, it will get a default value of `step-N` where N is a number of slide.
+
+        So in the example below it'll be `step-2`.
+
+        The hash part of the url when this step is active will be `#/step-2`.
+
+        You can also use `#step-2` in a link, to point directly to this particular step.
+
+        Please note, that while `#/step-2` (with slash) would also work in a link it's not recommended.
+        Using classic `id`-based links like `#step-2` makes these links usable also in fallback mode.
+
+    -->
+	<div id="impress">
+		<div id="start" class="step" data-x="-1600" data-y="-1500">
+			<div style="float: left;">
+				<img alt="HTML5 Logo" src="images/HTML5_Logo.png">
+			</div>
+
+			<div style="float: left;">
+				<strong style="font-size: 78px">WebGL</strong>
+				<p>Eric Kizaki</p>
+			</div>
+
+			<div style="clear: both;"></div>
+			<p>
+				<em>A quick taste</em>
+			</p>
+		</div>
+
+		<div id="step" class="step" data-x="-2200" data-y="-1500"
+			data-z="-3000">
+			Gives JavaScript access to the power of the GPU to create impressive 3D applications.
+		</div>
+
+		<div class="step slide bulleted" data-x="1000" data-y="-1500">
+			<strong class="slideTitle">Intro</strong>
+			<ul>
+				<li>2011 Mozilla and Khronos Group</li>
+				<li>OpenGL ES 2.0 2D/3d API for JavaScript</li>
+				<li>Backed by Apple, Google, Mozilla.  IE is catching up.</li>
+				<li>HTML5 Canvas Element</li>
+			</ul>
+            <img style="position: absolute;top: 4px;right: 10px;" alt="khronosgroup"
+                src="images/webgl/KhronosGroup.png" />
+		</div>
+
+		<div class="step slide bulleted" data-x="2200" data-y="-1500">
+            <div style="margin-left: auto; margin-right: auto;">
+                <img style="" alt="opengles" src="images/webgl/OpenGLES.jpg" />
+
+                <div style="float: left;">
+                    <a href="http://www.amazon.com/gp/product/0321902920" target="_blank">
+                        <img style="" alt="webglbook" src="images/webgl/webglbook.jpeg" />
+                    </a>
+                </div>
+
+                <div style="float: right; width: 400px; margin-left: 40px; margin-top: 40px;">
+                    <a href="http://siliconangle.com/blog/2013/11/20/webgl-graphics-technology-powers-sony-playstation-4-ui/" target="_blank">
+                        PlayStation 4 UI is browser based and uses WebGL
+                    </a>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+		</div>
+
+		<div class="step" data-x="2200" data-y="-1500" data-z="3000" data-rotate-z="180" data-rotate-x="90">
+            <a href="http://caniuse.com/#feat=webgl" target="_blank">
+                <img alt="caniuse" src="images/webgl/caniuse.jpg"  width="1024" height="700" />
+            </a>
+			<!--<iframe width="900" height="600" src="http://www.youtube.com/embed/Z897fkPn7Rw?start=125" frameborder="0" allowfullscreen></iframe>-->
+		</div>
+
+<!--
+		<div class="step" data-x="6000" data-y="100" data-z="50" data-scale="15" data-rotate="180">
+
+            <a href="http://www.notebookcheck.net/Intel-HD-Graphics-4000-Benchmarked.73567.0.html" target="_blank">
+                <img alt="hardware" src="images/webgl/fps.jpg" />
+            </a>
+
+		</div>
+-->
+		<div class="step slide bulleted" data-x="1500" data-y="3500" data-z="50" data-rotate-x="-30" data-rotate-y="-45" data-rotate-z="0">
+            <strong class="slideTitle">Examples</strong>
+
+            <br/>
+                <div>
+                    <a href="http://stars.chromeexperiments.com" target="_blank">
+                        <img alt="stars" src="images/webgl/stars.png" />
+                    </a>
+
+                    <a href="http://www.shapespark.com/formikodesign/old-brewery-apartment" target="_blank">
+                        <img alt="house" src="images/webgl/house.png" />
+                    </a>
+
+                    <a href="http://lo-th.github.io/3d.city/index.html" target="_blank">
+                        <img alt="simcity" src="images/webgl/simcity.png" height="250px" />
+                    </a>
+                </div>
+
+		</div>
+
+		<div  class="step" data-x="-1500" data-y="3500" data-z="50" data-rotate-x="-30" data-rotate-y="45" data-rotate-z="0">
+            <img alt="env" src="images/webgl/env.png" width="1024" height="700">
+
+		</div>
+
+		<div  class="step slide bulleted" data-x="2000" data-y="3500" data-z="50" data-rotate-x="-30" data-rotate-y="135" data-rotate-z="0">
+			<strong class="slideTitle">Shaders</strong>
+            <ul>
+                <li style="margin-top: 1.5em;">OpenGL ES Shading Language (GLSL ES)</li>
+                <li style="margin-top: 1.5em;">Vertex:  Points, Position and size</li>
+                <li style="margin-top: 1.5em;">Fragment:  Color and lighting</li>
+                <li style="margin-top: 1.5em;">Typed language similar to C</li>
+                <li style="margin-top: 1.5em;">Native support for matrix math and vectors</li>
+            </ul>
+		</div>
+
+		<div class="step" data-x="-1500" data-y="3500" data-z="50" data-scale="0.5" data-rotate-x="-30" data-rotate-y="135" data-rotate-z="0">
+
+            <img src="images/webgl/vertexshader.png">
+            <img src="images/webgl/fragmentshader.png">
+
+		</div>
+
+		<div class="step" data-x="1500" data-y="4200" data-z="50" data-scale="0.5" data-rotate-x="-30" data-rotate-y="135"  data-rotate-z="0">
+            <a href="https://sites.google.com/site/webglbook" target="_blank">https://sites.google.com/site/webglbook</a>
+            <a href="https://dazzling-fire-6644.firebaseapp.com/webgl/ch02/ClickedPoints.html" target="_blank">CH2 clicked points</a>
+		</div>
+
+		<div class="step" data-x="-1440" data-y="5000" data-z="50" data-scale="0.5" data-rotate-x="-180" data-rotate-y="250" data-rotate-z="180">
+			<img src="images/webgl/coordinates.jpg" width="1024" height="700" />
+		</div>
+
+        <div class="step" data-x="-1440" data-y="7000" data-z="50" data-scale="0.5" data-rotate-x="-180" data-rotate-y="250" data-rotate-z="180">
+            <img src="images/webgl/pipeline.jpg" width="1024" height="700" />
+        </div>
+
+        <div class="step" data-x="-1440" data-y="9000" data-z="50" data-scale="0.5" data-rotate-x="-180" data-rotate-y="250" data-rotate-z="180">
+            <img src="images/webgl/shapes.jpg" width="1024" height="700" />
+        </div>
+
+        <div class="step" data-x="-1440" data-y="1100" data-z="50" data-scale="0.5" data-rotate-x="-180" data-rotate-y="250" data-rotate-z="180">
+            <a href="https://dazzling-fire-6644.firebaseapp.com/webgl/ch07/HelloCube.html
+" target="_blank"><img src="images/webgl/cubevertex.png" width="1024" height="700" /></a>
+        </div>
+
+        <div class="step" data-x="-1440" data-y="1300" data-z="50" data-scale="0.5" data-rotate-x="-180" data-rotate-y="250" data-rotate-z="180">
+            <img src="images/webgl/projection.jpg" width="1024" height="700" />
+        </div>
+
+        <div  class="step slide bulleted" data-x="4000" data-y="3500" data-z="50" data-y="3500" data-z="50" data-rotate-x="-30" data-rotate-y="135" data-rotate-z="0">
+            <strong class="slideTitle">Three.js</strong>
+            <ul>
+                <li style="margin-top: 1.5em;">Don't need to write shaders</li>
+                <li style="margin-top: 1.5em;"><a href="https://dazzling-fire-6644.firebaseapp.com/threejs/helloworld/
+" target="_blank">Hello World</a></li>
+                <li style="margin-top: 1.5em;"><a href="http://stemkoski.github.io/Three.js/Shapes.html" target="_blank">Primitives</a></li>
+                <li style="margin-top: 1.5em;"><a href="http://stemkoski.github.io/Three.js/Materials-Solid.html" target="_blank">Materials</a></li>
+                <li style="margin-top: 1.5em;"><a href="http://threejs.org/" target="_blank">Threejs.org</a></li>
+
+            </ul>
+        </div>
+
+        <div  class="step slide bulleted" data-x="6000" data-y="3500" data-z="50" data-y="3500" data-z="50" data-rotate-x="-30" data-rotate-y="135" data-rotate-z="0">
+            <strong class="slideTitle">Demo</strong>
+            <ul>
+                <li style="margin-top: 1.5em;"><a href="https://dazzling-fire-6644.firebaseapp.com/threejs/" target="_blank">Demo</a></li>
+
+            </ul>
+        </div>
+
+<!--
+
+
+
+
+        <div  class="step slide bulleted" data-x="2000" data-y="3500" data-z="50" data-y="3500" data-z="50" data-rotate-x="-30" data-rotate-y="135" data-rotate-z="0">
+            <strong class="slideTitle">Three.js</strong>
+            <ul>
+                <li style="margin-top: 1.5em;">Don't need to write shaders</li>
+                <li style="margin-top: 1.5em;"><a href="https://dazzling-fire-6644.firebaseapp.com/threejs/helloworld/
+" target="_blank">Hello World></a></li>
+                <li style="margin-top: 1.5em;"><a href="http://stemkoski.github.io/Three.js/Shapes.html" target="_blank">Primitives</a></li>
+                <li style="margin-top: 1.5em;"><a href="http://stemkoski.github.io/Three.js/Materials-Solid.html" target="_blank">Materials</a></li>
+            </ul>
+        </div>
+
+        <div  class="step slide bulleted" data-x="2000" data-y="3500" data-z="50" data-y="3500" data-z="50" data-rotate-x="-30" data-rotate-y="135" data-rotate-z="0">
+            <strong class="slideTitle">Learning Resources</strong>
+            <ul>
+                <li style="margin-top: 1.5em;">Don't need to write shaders</li>
+                <li style="margin-top: 1.5em;"><a href="https://dazzling-fire-6644.firebaseapp.com/threejs/helloworld/
+" target="_blank">Hello World></a></li>
+                <li style="margin-top: 1.5em;"><a href="http://stemkoski.github.io/Three.js/Shapes.html" target="_blank">Primitives</a></li>
+                <li style="margin-top: 1.5em;"><a href="http://stemkoski.github.io/Three.js/Materials-Solid.html" target="_blank">Materials</a></li>
+            </ul>
+        </div>
+-->
+		<!--
+    <div id="title" class="step" data-x="0" data-y="0" data-scale="4">
+        <span class="try">then you should try</span>
+        <h1>impress.js<sup>*</sup></h1>
+        <span class="footnote"><sup>*</sup> no rhyme intended</span>
+    </div>
+
+    <div id="its" class="step" data-x="850" data-y="3000" data-rotate="90" data-scale="5">
+        <p>It's a <strong>presentation tool</strong> <br/>
+        inspired by the idea behind <a href="http://prezi.com">prezi.com</a> <br/>
+        and based on the <strong>power of CSS3 transforms and transitions</strong> in modern browsers.</p>
+    </div>
+
+    <div id="big" class="step" data-x="3500" data-y="2100" data-rotate="180" data-scale="6">
+        <p>visualize your <b>big</b> <span class="thoughts">thoughts</span></p>
+    </div>
+
+    <div id="tiny" class="step" data-x="2825" data-y="2325" data-z="-3000" data-rotate="300" data-scale="1">
+        <p>and <b>tiny</b> ideas</p>
+    </div>
+
+    <div id="ing" class="step" data-x="3500" data-y="-850" data-rotate="270" data-scale="6">
+        <p>by <b class="positioning">positioning</b>, <b class="rotating">rotating</b> and <b class="scaling">scaling</b> them on an infinite canvas</p>
+    </div>
+
+    <div id="imagination" class="step" data-x="6700" data-y="-300" data-scale="6">
+        <p>the only <b>limit</b> is your <b class="imagination">imagination</b></p>
+    </div>
+
+    <div id="source" class="step" data-x="6300" data-y="2000" data-rotate="20" data-scale="4">
+        <p>want to know more?</p>
+        <q><a href="http://github.com/bartaz/impress.js">use the source</a>, Luke!</q>
+    </div>
+
+    <div id="one-more-thing" class="step" data-x="6000" data-y="4000" data-scale="2">
+        <p>one more thing...</p>
+    </div>
+
+    <div id="its-in-3d" class="step" data-x="6200" data-y="4300" data-z="-100" data-rotate-x="-40" data-rotate-y="10" data-scale="2">
+        <p><span class="have">have</span> <span class="you">you</span> <span class="noticed">noticed</span> <span class="its">it's</span> <span class="in">in</span> <b>3D<sup>*</sup></b>?</p>
+        <span class="footnote">* beat that, prezi ;)</span>
+    </div>
+    -->
+		<div id="overview" class="step" data-x="3000" data-y="1500"
+			data-scale="10"></div>
+
+	</div>
+
+	<div class="hint">
+		<p>Use a spacebar or arrow keys to navigate</p>
+	</div>
+	<script>
+		if ("ontouchstart" in document.documentElement) {
+			document.querySelector(".hint").innerHTML = "<p>Tap on the left or right to navigate</p>";
+		}
+	</script>
+
+	<script src="js/impress.js"></script>
+	<script>
+		impress().init();
+	</script>
+
+	<!--
+
+    The `impress()` function also gives you access to the API that controls the presentation.
+
+    Just store the result of the call:
+
+        var api = impress();
+
+    and you will get three functions you can call:
+
+        `api.init()` - initializes the presentation,
+        `api.next()` - moves to next step of the presentation,
+        `api.prev()` - moves to previous step of the presentation,
+        `api.goto( idx | id | element, [duration] )` - moves the presentation to the step given by its index number
+                id or the DOM element; second parameter can be used to define duration of the transition in ms,
+                but it's optional - if not provided default transition duration for the presentation will be used.
+
+    You can also simply call `impress()` again to get the API, so `impress().next()` is also allowed.
+    Don't worry, it wont initialize the presentation again.
+
+    For some example uses of this API check the last part of the source of impress.js where the API
+    is used in event handlers.
+
+-->
+
+</body>
+</html>
